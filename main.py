@@ -1,5 +1,8 @@
 '''
 NOTE:
+your part can be integrated or incorporated with the code or replace it
+
+
 Trie Structure: Added TrieNode and Trie classes to manage the usernames.
 Insert Method: The insert method in the Trie class allows for adding usernames as accounts are created.
 Search Method: The search method retrieves all usernames that match a given prefix, which can be used in the user search functionality.
