@@ -42,18 +42,18 @@ class Graph:
         self.vertices = dict()
 
     def add_person(self,name,username,hobbies,description=None):
-        if name not in self.vertices:
+        if username not in self.vertices:
             person = Vertex(name,username, hobbies, description)
-            self.vertices[name] = person
+            self.vertices[username] = person
             return True
         return False
 
-    def make_connections(self, name1, name2):
-        person1 = self.vertices[name1]
-        person2 = self.vertices[name2]
+    def make_connections(self, username1, username2):
+        person1 = self.vertices[username1]
+        person2 = self.vertices[username2]
         connection = Edge(person1, person2)
-        person1.adjacency_map[person2.name] = connection
-        person2.adjacency_map[person1.name] = connection
+        person1.adjacency_map[person2] = connection
+        person2.adjacency_map[person1] = connection
 
     def recommend_friends(self, name, limit=3):
         recommendations = []
@@ -70,10 +70,10 @@ class Graph:
         recommendations.sort(reverse=True, key=lambda x: x[0])
         return [user[1] for user in recommendations[:limit]]
 
-    def common_friends(self, name1, name2):
+    def common_friends(self, username1, username2):
         count=0
-        person1=self.vertices[name1]
-        person2=self.vertices[name2]
+        person1=self.vertices[username1]
+        person2=self.vertices[username2]
         if len(person1.adjacency_map)<len(person2.adjacency_map):
             for i in person1.adjacency_map:
                 if i in person2.adjacency_map:
