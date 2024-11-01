@@ -9,7 +9,7 @@ Search Method: The search method retrieves all usernames that match a given pref
 Searching for Users: The search_users method utilizes the Trie to find users based on an input string.
 
 THE TRIE THING, IM NOT SURE I'VE HAVE WHAT ADITHYA SAID
-THE REOMMENDATION THING AND SEARCH USER THING HAS TO BE INCORPORATED BY ADITHYA AND AASHIQ
+THE REOMMENDATION THING AND SEARCH USER THING HAS TO BE INCORPORATED BYND AASHIQ
 
 
 DATA STRUCTURES USED:
@@ -22,6 +22,7 @@ others are inbuilt data structures
 
 from typing import Dict, List, Set
 from dataclasses import dataclass
+from autocomplete import Trie
 
 class DEQUE:
     def __init__(self):
@@ -43,33 +44,6 @@ class DEQUE:
     
     def __iter__(self):
         return iter(self.items)
-
-class TrieNode:
-    def __init__(self):
-        self.children = {}
-        self.is_end_of_word = False
-        self.usernames = []  # List of usernames with this prefix
-
-class Trie:
-    def __init__(self):
-        self.root = TrieNode()
-
-    def insert(self, username: str):
-        node = self.root
-        for char in username:
-            if char not in node.children:
-                node.children[char] = TrieNode()
-            node = node.children[char]
-            node.usernames.append(username)  # Store the username for prefix suggestions
-        node.is_end_of_word = True
-
-    def search(self, prefix: str) -> List[str]:
-        node = self.root
-        for char in prefix:
-            if char not in node.children:
-                return []
-            node = node.children[char]
-        return node.usernames
 
 @dataclass
 class User:
