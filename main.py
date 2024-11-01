@@ -23,10 +23,11 @@ from typing import Dict, List, Set
 from dataclasses import dataclass
 
 class Vertex:
-    def __init__(self, name, hobbies, description=None):
+    def __init__(self, name,username, hobbies, description=None):
         self.name = name
         self.hobbies = set(hobbies)
         self.description = description
+        self.username=username
         self.adjacency_map = dict()
         self.inbox = []
         self.messages = []
@@ -40,9 +41,9 @@ class Graph:
     def __init__(self):
         self.vertices = dict()
 
-    def add_person(self, name, hobbies, description=None):
+    def add_person(self,name,username,hobbies,description=None):
         if name not in self.vertices:
-            person = Vertex(name, hobbies, description)
+            person = Vertex(name,username, hobbies, description)
             self.vertices[name] = person
             return True
         return False
@@ -70,9 +71,19 @@ class Graph:
         return [user[1] for user in recommendations[:limit]]
 
     def common_friends(self, name1, name2):
-        person1 = self.vertices[name1]
-        person2 = self.vertices[name2]
-        return len(set(person1.adjacency_map) & set(person2.adjacency_map))
+        count=0
+        person1=self.vertices[name1]
+        person2=self.vertices[name2]
+        if len(person1.adjacency_map)<len(person2.adjacency_map):
+            for i in person1.adjacency_map:
+                if i in person2.adjacency_map:
+                    count+=1
+        else:
+            for i in person2.adjacency_map:
+                if i in person1.adjacency_map:
+                    count+=1
+
+        return count
 
     def send_friend_request(self, from_user, to_user):
         if to_user in self.vertices and from_user not in self.vertices[to_user].inbox:
