@@ -1,3 +1,22 @@
+'''
+NOTE:
+Trie Structure: Added TrieNode and Trie classes to manage the usernames.
+Insert Method: The insert method in the Trie class allows for adding usernames as accounts are created.
+Search Method: The search method retrieves all usernames that match a given prefix, which can be used in the user search functionality.
+Searching for Users: The search_users method utilizes the Trie to find users based on an input string.
+
+THE TRIE THING, IM NOT SURE I'VE HAVE WHAT ADITHYA SAID
+THE REOMMENDATION THING AND SEARCH USER THING HAS TO BE INCORPORATED BY ADITHYA AND AASHIQ
+
+
+DATA STRUCTURES USED:
+NOT STACK
+
+
+Deque
+others are inbuilt data structures
+'''
+
 from typing import Dict, List, Set
 from dataclasses import dataclass
 
