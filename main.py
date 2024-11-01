@@ -1,212 +1,143 @@
-'''
-NOTE:
-your part can be integrated or incorporated with the code or replace it
+import re
+from social_network import SocialNetwork
+from auto_complete import Trie
 
+network = SocialNetwork()
+trie = Trie()
 
-Trie Structure: Added TrieNode and Trie classes to manage the usernames.
-Insert Method: The insert method in the Trie class allows for adding usernames as accounts are created.
-Search Method: The search method retrieves all usernames that match a given prefix, which can be used in the user search functionality.
-Searching for Users: The search_users method utilizes the Trie to find users based on an input string.
+def validate_username(username):
+    return re.match(r'^[A-Za-z0-9_.]+$', username)
 
-THE TRIE THING, IM NOT SURE I'VE HAVE WHAT ADITHYA SAID
-THE REOMMENDATION THING AND SEARCH USER THING HAS TO BE INCORPORATED BYND AASHIQ
+def confirm_username(username, suggestions):
+    if len(suggestions) == 1:
+        if suggestions[0] != username.lower():
+            confirmation = input(f"Similar username found. Did you mean {suggestions[0]}? (yes/no): ")
+            if confirmation.lower() in {"y", "yes"}:
+                return suggestions[0]
+        return suggestions[0]
+    else:
+        print("Similar usernames found:")
+        for i, suggestion in enumerate(suggestions, start=1):
+            print(f"{i}. {suggestion}")
+        print("0. Retry")
+        while True:
+            try:
+                confirmation = int(input("Select intended username >> "))
+                if confirmation == 0:
+                    break
+                elif 1 <= confirmation <= len(suggestions):
+                    return suggestions[confirmation - 1]
+                else:
+                    print("Invalid option. Please try again!")
+            except ValueError:
+                print("Invalid option. Please enter a number!")
+    return None
 
-
-DATA STRUCTURES USED:
-NOT STACK
-
-
-Deque
-others are inbuilt data structures
-'''
-from typing import Dict, List, Set
-from dataclasses import dataclass
-
-class Vertex:
-    def __init__(self, name,username, hobbies, description=None):
-        self.name = name
-        self.hobbies = set(hobbies)
-        self.description = description
-        self.username=username
-        self.adjacency_map = dict()
-        self.inbox = []
-        self.messages = []
-
-class Edge:
-    def __init__(self, vertex1, vertex2):
-        self.vertex1 = vertex1
-        self.vertex2 = vertex2
-
-class Graph:
-    def __init__(self):
-        self.vertices = dict()
-
-    def add_person(self,name,username,hobbies,description=None):
-        if username not in self.vertices:
-            person = Vertex(name,username, hobbies, description)
-            self.vertices[username] = person
-            return True
-        return False
-
-    def make_connections(self, username1, username2):
-        person1 = self.vertices[username1]
-        person2 = self.vertices[username2]
-        connection = Edge(person1, person2)
-        person1.adjacency_map[person2] = connection
-        person2.adjacency_map[person1] = connection
-
-    def recommend_friends(self, name, limit=3):
-        recommendations = []
-        person = self.vertices[name]
-        
-        for potential_friend_name, potential_friend in self.vertices.items():
-            if potential_friend_name == name or potential_friend_name in person.adjacency_map:
-                continue
-            
-            common_hobbies = len(person.hobbies & potential_friend.hobbies)
-            if common_hobbies > 0:
-                recommendations.append((common_hobbies, potential_friend_name))
-        
-        recommendations.sort(reverse=True, key=lambda x: x[0])
-        return [user[1] for user in recommendations[:limit]]
-
-    def common_friends(self, username1, username2):
-        count=0
-        person1=self.vertices[username1]
-        person2=self.vertices[username2]
-        if len(person1.adjacency_map)<len(person2.adjacency_map):
-            for i in person1.adjacency_map:
-                if i in person2.adjacency_map:
-                    count+=1
-        else:
-            for i in person2.adjacency_map:
-                if i in person1.adjacency_map:
-                    count+=1
-
-        return count
-
-    def send_friend_request(self, from_user, to_user):
-        if to_user in self.vertices and from_user not in self.vertices[to_user].inbox:
-            self.vertices[to_user].inbox.append(from_user)
-            return True
-        return False
-    
-    def accept_friend_request(self, username, requester):
-        user = self.vertices[username]
-        if requester in user.inbox:
-            self.make_connections(username, requester)
-            user.inbox.remove(requester)
-            return True
-        return False
-
-    def send_message(self, from_user, to_user, message):
-        if to_user in self.vertices and from_user in self.vertices[to_user].adjacency_map:
-            self.vertices[to_user].messages.append(f"From {from_user}: {message}")
-            return True
-        return False
-    
-    def get_messages(self, username):
-        user = self.vertices[username]
-        return user.messages
-
-    def get_friend_requests(self, username):
-        return self.vertices[username].inbox
+def get_username(input_msg):
+    while True:
+        username = input(input_msg)
+        suggestions = trie.get_suggestions(username)
+        if not suggestions:
+            print("No such username found! Please try again.")
+            continue
+        confirmed_username = confirm_username(username, suggestions)
+        if confirmed_username:
+            return confirmed_username
 
 def main():
-    network = Graph()
-    print("=== Social Network ===")
     while True:
+        print("======== LinkUs ========")
         print("1. Create Account")
         print("2. Login")
         print("3. Exit")
-        option = input("Choose an option: ")
+        option = input("Choose an option >> ")
         
         if option == "1":
             name = input("Enter your name: ")
+            while True:
+                username = input("Enter a username: ")
+                if not validate_username(username):
+                    print("Invalid username! Try again with only letters, numbers, underscore and period")
+                    continue
+                if trie.search(username):
+                    print("Username already exists! Please try again.")
+                    continue
+                trie.insert(username)
+                break
             hobbies = input("Enter hobbies (comma-separated): ").split(",")
-            if network.add_person(name, hobbies):
-                print("Account created successfully!")
-            else:
-                print("Username already exists. Please try a different one.")
+            description = input("Enter a personal description: ")
+            network.add_person(name, username, hobbies, description)
+            print(f"Account for {username.lower()} created successfully!\n")
         
         elif option == "2":
-            username = input("Enter username: ")
-            if username in network.vertices:
-                print(f"\n=== Welcome, {username} ===")
-                while True:
-                    print("1. Recommend Friends")
-                    print("2. Search Users")
-                    print("3. View Users by Hobby")
-                    print("4. Inbox")
-                    print("5. Send Message")
-                    print("6. View Messages")
-                    print("7. Logout")
-                    choice = input("Choose an option: ")
+            username = get_username("Enter the Username: ")
+            print(f"\n==== Welcome, {username} ====")
+            while True:
+                print("1. Get Friend Recommendations")
+                print("2. Search Users")
+                print("3. View Users by Hobby")
+                print("4. Inbox")
+                print("5. Send Message")
+                print("6. View Messages")
+                print("7. Logout")
+                choice = input("Choose an option: ")
+                
+                if choice == "1":
+                    ... # TODO: To be implemented by Aashiq & Narain
                     
-                    if choice == "1":
-                        recommendations = network.recommend_friends(username)
-                        if recommendations:
-                            print("Friend Recommendations:")
-                            for rec in recommendations:
-                                print(rec)
-                        else:
-                            print("No recommendations available.")
+                elif choice == "2":
+                    username = get_username("Enter Username to Search: ")
+                    ... # TODO: Rest to be implemented by Karthikeyan
+                
+                elif choice == "3":
+                    ... # TODO: To be implemented by Anurup
                     
-                    elif choice == "2":
-                        # Searching functionality can be integrated using other data structures like a Trie
-                        print("This feature is not implemented yet.")
-                    
-                    elif choice == "3":
-                        print("This feature is not implemented yet.")
-                    
-                    elif choice == "4":
-                        friend_requests = network.get_friend_requests(username)
-                        if friend_requests:
-                            print("Pending friend requests:")
-                            for i, requester in enumerate(friend_requests, start=1):
-                                print(f"{i}. {requester}")
-                            selected = input("Enter number to accept request (or 0 to skip): ")
-                            if selected.isdigit() and 1 <= int(selected) <= len(friend_requests):
-                                requester = friend_requests[int(selected) - 1]
-                                if network.accept_friend_request(username, requester):
-                                    print(f"You are now friends with {requester}!")
-                                else:
-                                    print("Failed to accept friend request.")
-                        else:
-                            print("No pending friend requests.")
-                    
-                    elif choice == "5":
-                        to_user = input("Enter the username of the recipient: ")
-                        message = input("Enter your message: ")
-                        if network.send_message(username, to_user, message):
-                            print("Message sent successfully!")
-                        else:
-                            print("Failed to send message. Check if the user is your friend.")
-                    
-                    elif choice == "6":
-                        messages = network.get_messages(username)
-                        if messages:
-                            print("Your Messages:")
-                            for msg in messages:
-                                print(msg)
-                        else:
-                            print("No messages found.")
-                    
-                    elif choice == "7":
-                        print(f"Logging out {username}.")
-                        break
-                    
+                elif choice == "4":
+                    friend_requests = network.get_friend_requests(username)
+                    if friend_requests:
+                        print("Pending friend requests:")
+                        for i, requester in enumerate(friend_requests, start=1):
+                            print(f"{i}. {requester}")
+                        selected = input("Enter number to accept request (or 0 to skip): ")
+                        if selected.isdigit() and 1 <= int(selected) <= len(friend_requests):
+                            requester = friend_requests[int(selected) - 1]
+                            if network.accept_friend_request(username, requester):
+                                print(f"Yay! You are now friends with {requester}!")
+                            else:
+                                print("Failed to Accept Friend Request.")
                     else:
-                        print("Invalid option. Please try again.")
-            else:
-                print("Login failed. Username not found.")
+                        print("No pending Friend Requests.")
+                
+                elif choice == "5":
+                    to_user = get_username("Enter the Username of the recipient: ")
+                    message = input("Enter your message: ")
+                    if network.send_message(username, to_user, message):
+                        print("Message sent successfully!")
+                    else:
+                        print("Failed to send message. Check if the user is your friend.")
+                
+                elif choice == "6":
+                    messages = network.get_messages(username)
+                    if messages:
+                        print("Your Messages:")
+                        for msg in messages:
+                            print(msg)
+                    else:
+                        print("No messages found.")
+                
+                elif choice == "7":
+                    print(f"\nLogging out {username}...")
+                    break
+                
+                else:
+                    print("Invalid option. Please try again!")
         
         elif option == "3":
-            print("Exiting the social network.")
+            print("\nThanks for using LinkUs....")
             break
         
         else:
-            print("Invalid option. Please try again.")
+            print("Invalid option. Please try again!")
 
 if __name__ == "__main__":
     main()
