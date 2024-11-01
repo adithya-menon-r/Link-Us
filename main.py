@@ -19,133 +19,90 @@ NOT STACK
 Deque
 others are inbuilt data structures
 '''
-
 from typing import Dict, List, Set
 from dataclasses import dataclass
-from autocomplete import Trie
 
-class DEQUE:
+class Vertex:
+    def __init__(self, name, hobbies, description=None):
+        self.name = name
+        self.hobbies = set(hobbies)
+        self.description = description
+        self.adjacency_map = dict()
+        self.inbox = []
+        self.messages = []
+
+class Edge:
+    def __init__(self, vertex1, vertex2):
+        self.vertex1 = vertex1
+        self.vertex2 = vertex2
+
+class Graph:
     def __init__(self):
-        self.items = []
-    
-    def append(self, item):
-        self.items.append(item)
-    
-    def popleft(self):
-        if self.items:
-            return self.items.pop(0)
-        raise IndexError("pop from an empty deque")
-    
-    def remove(self, item):
-        self.items.remove(item)
-    
-    def __len__(self):
-        return len(self.items)
-    
-    def __iter__(self):
-        return iter(self.items)
+        self.vertices = dict()
 
-@dataclass
-class User:
-    name: str
-    username: str
-    hobbies: Set[str]
-    friends: Set[str]
-    inbox: DEQUE
-    messages: DEQUE
+    def add_person(self, name, hobbies, description=None):
+        if name not in self.vertices:
+            person = Vertex(name, hobbies, description)
+            self.vertices[name] = person
+            return True
+        return False
 
-class SocialNetwork:
-    def __init__(self):
-        self.users: Dict[str, User] = {}
-        self.usernames_set: Set[str] = set()
-        self.trie = Trie()  # Initialize the Trie for username search
+    def make_connections(self, name1, name2):
+        person1 = self.vertices[name1]
+        person2 = self.vertices[name2]
+        connection = Edge(person1, person2)
+        person1.adjacency_map[person2.name] = connection
+        person2.adjacency_map[person1.name] = connection
 
-    def create_account(self, name: str, username: str, hobbies: List[str]) -> bool:
-        username = username.lower()
-        if username in self.usernames_set:
-            return False
-        
-        user = User(
-            name=name, 
-            username=username, 
-            hobbies=set(hobbies), 
-            friends=set(),
-            inbox=DEQUE(),
-            messages=DEQUE()
-        )
-        
-        self.users[username] = user
-        self.usernames_set.add(username)
-        self.trie.insert(username)  # Insert the username into the Trie
-        return True
-
-    def login(self, username: str) -> bool:
-        return username.lower() in self.users
-    
-    def recommend_friends(self, username: str, limit: int = 3) -> List[str]:
-        user = self.users[username.lower()]
+    def recommend_friends(self, name, limit=3):
         recommendations = []
+        person = self.vertices[name]
         
-        for potential_friend in self.users:
-            if potential_friend in user.friends or potential_friend == username:
+        for potential_friend_name, potential_friend in self.vertices.items():
+            if potential_friend_name == name or potential_friend_name in person.adjacency_map:
                 continue
             
-            common_hobbies = len(user.hobbies & self.users[potential_friend].hobbies)
+            common_hobbies = len(person.hobbies & potential_friend.hobbies)
             if common_hobbies > 0:
-                recommendations.append((common_hobbies, potential_friend))
+                recommendations.append((common_hobbies, potential_friend_name))
         
         recommendations.sort(reverse=True, key=lambda x: x[0])
         return [user[1] for user in recommendations[:limit]]
-    
-    def send_friend_request(self, from_user: str, to_user: str) -> bool:
-        from_user = from_user.lower()
-        to_user = to_user.lower()
-        
-        if to_user not in self.users or from_user == to_user or from_user in self.users[to_user].friends:
-            return False
-        
-        if from_user not in self.users[to_user].inbox:
-            self.users[to_user].inbox.append(from_user)
+
+    def common_friends(self, name1, name2):
+        person1 = self.vertices[name1]
+        person2 = self.vertices[name2]
+        return len(set(person1.adjacency_map) & set(person2.adjacency_map))
+
+    def send_friend_request(self, from_user, to_user):
+        if to_user in self.vertices and from_user not in self.vertices[to_user].inbox:
+            self.vertices[to_user].inbox.append(from_user)
             return True
         return False
     
-    def get_friend_requests(self, username: str) -> List[str]:
-        user = self.users[username.lower()]
-        return list(user.inbox)
-    
-    def accept_friend_request(self, username: str, requester: str) -> bool:
-        user = self.users[username.lower()]
-        requester = requester.lower()
-        
+    def accept_friend_request(self, username, requester):
+        user = self.vertices[username]
         if requester in user.inbox:
-            user.friends.add(requester)
-            self.users[requester].friends.add(username)
+            self.make_connections(username, requester)
             user.inbox.remove(requester)
             return True
         return False
 
-    def send_message(self, from_user: str, to_user: str, message: str) -> bool:
-        from_user = from_user.lower()
-        to_user = to_user.lower()
-        
-        if to_user in self.users and from_user in self.users[to_user].friends:
-            self.users[to_user].messages.append((from_user, message))
+    def send_message(self, from_user, to_user, message):
+        if to_user in self.vertices and from_user in self.vertices[to_user].adjacency_map:
+            self.vertices[to_user].messages.append(f"From {from_user}: {message}")
             return True
         return False
+    
+    def get_messages(self, username):
+        user = self.vertices[username]
+        return user.messages
 
-    def get_messages(self, username: str) -> List[str]:
-        user = self.users[username.lower()]
-        return [f"From {msg[0]}: {msg[1]}" for msg in user.messages]
-
-    def search_users(self, username_input: str) -> List[str]:
-        suggestions = self.trie.search(username_input.lower())
-        if len(suggestions) == 1:
-            return suggestions
-        return suggestions  
-
+    def get_friend_requests(self, username):
+        return self.vertices[username].inbox
 
 def main():
-    network = SocialNetwork()
+    network = Graph()
     print("=== Social Network ===")
     while True:
         print("1. Create Account")
@@ -155,16 +112,15 @@ def main():
         
         if option == "1":
             name = input("Enter your name: ")
-            username = input("Enter a username: ")
             hobbies = input("Enter hobbies (comma-separated): ").split(",")
-            if network.create_account(name, username, hobbies):
+            if network.add_person(name, hobbies):
                 print("Account created successfully!")
             else:
                 print("Username already exists. Please try a different one.")
         
         elif option == "2":
             username = input("Enter username: ")
-            if network.login(username):
+            if username in network.vertices:
                 print(f"\n=== Welcome, {username} ===")
                 while True:
                     print("1. Recommend Friends")
@@ -186,29 +142,16 @@ def main():
                             print("No recommendations available.")
                     
                     elif choice == "2":
-                        username_input = input("Enter username to search: ")
-                        suggestions = network.search_users(username_input)
-                        if len(suggestions) == 1:
-                            print(f"User found: {suggestions[0]}")
-                        elif len(suggestions) > 1:
-                            print("Users found:")
-                            for i, user in enumerate(suggestions, start=1):
-                                print(f"{i}. {user}")
-                            selected = input("Enter the number to select a user or 0 to skip: ")
-                            if selected.isdigit() and 1 <= int(selected) <= len(suggestions):
-                                selected_user = suggestions[int(selected) - 1]
-                                print(f"Selected User: {selected_user}")
-                        else:
-                            print("No users found.")
+                        # Searching functionality can be integrated using other data structures like a Trie
+                        print("This feature is not implemented yet.")
                     
                     elif choice == "3":
-                        # Not implemented in the original code
                         print("This feature is not implemented yet.")
                     
                     elif choice == "4":
-                        print("Pending friend requests:")
                         friend_requests = network.get_friend_requests(username)
                         if friend_requests:
+                            print("Pending friend requests:")
                             for i, requester in enumerate(friend_requests, start=1):
                                 print(f"{i}. {requester}")
                             selected = input("Enter number to accept request (or 0 to skip): ")
@@ -244,7 +187,6 @@ def main():
                     
                     else:
                         print("Invalid option. Please try again.")
-            
             else:
                 print("Login failed. Username not found.")
         
@@ -255,7 +197,5 @@ def main():
         else:
             print("Invalid option. Please try again.")
 
-
 if __name__ == "__main__":
     main()
-
