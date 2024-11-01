@@ -1,12 +1,29 @@
+class Deque:
+    def __init__(self):
+        self.items = []
+    
+    def append(self, item):
+        self.items.append(item)
+
+    def remove(self, item):
+        if item in self.items:
+            self.items.remove(item)
+
+    def __iter__(self):
+        return iter(self.items)
+
+    def __repr__(self):
+        return repr(self.items)
+
 class Vertex:
-    def __init__(self, name,username, hobbies, description=None):
+    def __init__(self, name, username, hobbies, description=None):
         self.name = name
         self.hobbies = set(hobbies)
         self.description = description
-        self.username=username
+        self.username = username
         self.adjacency_map = dict()
-        self.inbox = []
-        self.messages = []
+        self.inbox = Deque()
+        self.messages = Deque()
 
 class Edge:
     def __init__(self, vertex1, vertex2):
@@ -45,18 +62,17 @@ class SocialNetwork:
         return [user[1] for user in recommendations[:limit]]
 
     def common_friends(self, username1, username2):
-        count=0
-        person1=self.vertices[username1]
-        person2=self.vertices[username2]
-        if len(person1.adjacency_map)<len(person2.adjacency_map):
-            for i in person1.adjacency_map:
-                if i in person2.adjacency_map:
-                    count+=1
+        count = 0
+        person1 = self.vertices[username1]
+        person2 = self.vertices[username2]
+        if len(person1.adjacency_map) < len(person2.adjacency_map):
+            for friend in person1.adjacency_map:
+                if friend in person2.adjacency_map:
+                    count += 1
         else:
-            for i in person2.adjacency_map:
-                if i in person1.adjacency_map:
-                    count+=1
-
+            for friend in person2.adjacency_map:
+                if friend in person1.adjacency_map:
+                    count += 1
         return count
 
     def send_friend_request(self, from_user, to_user):
@@ -64,7 +80,7 @@ class SocialNetwork:
             self.vertices[to_user].inbox.append(from_user)
             return True
         return False
-    
+
     def accept_friend_request(self, username, requester):
         user = self.vertices[username]
         if requester in user.inbox:
@@ -78,10 +94,10 @@ class SocialNetwork:
             self.vertices[to_user].messages.append(f"From {from_user}: {message}")
             return True
         return False
-    
+
     def get_messages(self, username):
         user = self.vertices[username]
-        return user.messages
+        return list(user.messages)
 
     def get_friend_requests(self, username):
-        return self.vertices[username].inbox
+        return list(self.vertices[username].inbox)
