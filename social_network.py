@@ -1,4 +1,6 @@
 from datetime import datetime
+import heapq
+import math
 from hashmap import ChainHashMap
 from typing import List, Set, Tuple, Optional
 
@@ -22,6 +24,21 @@ class Post:
     def add_comment(self, username: str, comment: str) -> None:
         """Add a comment to the post"""
         self.comments.append((username, comment, datetime.now()))
+
+    def priority_score(self, viewer_username: str, interaction_history: dict) -> float:
+        """Calculates a priority score for ranking in personalized feeds."""
+        # Time decay factor: newer posts get higher scores
+        time_diff = (datetime.now() - self.timestamp).total_seconds()
+        time_decay = math.exp(-time_diff / (60 * 60 * 24))  # Half-life of one day
+        
+        # Engagement factor: likes and comments add to score
+        engagement_score = len(self.likes) * 2 + len(self.comments) * 3
+
+        # User affinity: based on interaction frequency
+        affinity_score = interaction_history.get(self.author, 0) * 1.5
+        
+        # Final score combines factors with weights
+        return time_decay * 0.4 + engagement_score * 0.4 + affinity_score * 0.2
         
     def __repr__(self) -> str:
         likes_count = len(self.likes)
@@ -139,6 +156,11 @@ class SocialNetwork:
 
     def get_friend_requests(self, username):
         return list(self.vertices[username].inbox)
+    
+    def record_interaction(self, user1: str, user2: str):
+        """Records interactions to boost affinity scores between users."""
+        self.interaction_history[user1] = self.interaction_history.get(user1, {})
+        self.interaction_history[user1][user2] = self.interaction_history[user1].get(user2, 0) + 1
 
     # New methods for post functionality
     def create_post(self, username: str, content: str) -> str:
@@ -208,6 +230,32 @@ class SocialNetwork:
         # Sort by timestamp, newest first
         friend_posts.sort(key=lambda x: x[1].timestamp, reverse=True)
         return friend_posts
+    
+    def get_personalized_feed(self, username: str) -> List[Post]:
+        """Generates a personalized feed using a priority queue for ranking."""
+        if username not in self.vertices:
+            return []
+
+        # Get friend posts and calculate priority scores
+        posts_heap = []
+        user = self.vertices[username]
+        
+        for friend in user.adjacency_map:
+            friend_post_ids = self.user_posts.get(friend.username) or []
+            for pid in friend_post_ids:
+                post = self.posts.get(pid)
+                if post:
+                    # Calculate priority score and push to heap
+                    score = post.priority_score(username, self.interaction_history.get(username, {}))
+                    heapq.heappush(posts_heap, (-score, post))  # Use negative for max-heap behavior
+
+        # Retrieve top-ranked posts
+        feed = []
+        while posts_heap and len(feed) < 10:
+            _, post = heapq.heappop(posts_heap)
+            feed.append(post)
+        
+        return feed
 
     def get_post(self, post_id: str) -> Optional[Post]:
         """Get a specific post by ID"""
