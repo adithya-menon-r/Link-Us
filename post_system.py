@@ -45,5 +45,5 @@ class Post:
 [Post by {self.author} - {self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}]
 {self.content}
 
-❤️ {likes_count} {'like' if likes_count == 1 else 'likes'} | 💬 {comments_count} {'comment' if comments_count == 1 else 'comments'}
+❤️   {likes_count} {'like' if likes_count == 1 else 'likes'} | 💬 {comments_count} {'comment' if comments_count == 1 else 'comments'}
 """

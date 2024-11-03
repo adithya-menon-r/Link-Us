@@ -1,4 +1,5 @@
 import re
+
 from social_network import SocialNetwork
 from hobby_network import HobbyNetwork
 from friend_recommendation import FriendRecommender
@@ -18,7 +19,8 @@ def confirm_username(username, suggestions):
             confirmation = input(f"Similar username found. Did you mean {suggestions[0]}? (yes/no): ")
             if confirmation.lower() in {"y", "yes"}:
                 return suggestions[0]
-        return suggestions[0]
+        else:
+            return suggestions[0]
     else:
         print("Similar usernames found:")
         for i, suggestion in enumerate(suggestions, start=1):
@@ -37,17 +39,30 @@ def confirm_username(username, suggestions):
                 print("Invalid option. Please enter a number!")
     return None
 
-def get_username(input_msg):
+def get_username(input_msg, current_username=None):
     while True:
         username = input(input_msg)
-        suggestions = trie.get_suggestions(username)
-        if not suggestions:
-            print("No such username found! Please try again.")
-            continue
-        confirmed_username = confirm_username(username, suggestions)
+        if not trie.search(username):
+            suggestions = trie.get_suggestions(username)
+            if current_username in suggestions:
+                suggestions.remove(current_username)
+            if not suggestions:
+                print("No such username found! Please try again.")
+                continue
+            confirmed_username = confirm_username(username, suggestions)
+        else:
+            confirmed_username = username
         if confirmed_username:
             return confirmed_username
         
+def display_post(post):
+    print(post)
+    print("Liked by:", ", ".join(post.likes) if post.likes else "No likes yet")
+    if post.comments:
+        print("\nComments:")
+        for commenter, comment, timestamp in post.comments:
+            print(f"  {commenter} ({timestamp.strftime('%Y-%m-%d %H:%M')}): {comment}")
+
 def show_post_menu(network, username):
     while True:
         print("\n==== Post Menu ====")
@@ -71,12 +86,7 @@ def show_post_menu(network, username):
                 print("\nYour Posts:")
                 for pid, post in posts:
                     print(f"\nPost ID: {pid}")
-                    print(post)
-                    print("Liked by:", ", ".join(post.likes) if post.likes else "No likes yet")
-                    if post.comments:
-                        print("\nComments:")
-                        for commenter, comment, timestamp in post.comments:
-                            print(f"  {commenter} ({timestamp.strftime('%Y-%m-%d %H:%M')}): {comment}")
+                    display_post(post)
             else:
                 print("No posts yet!")
                 
@@ -86,12 +96,7 @@ def show_post_menu(network, username):
                 print("\nFriend Posts:")
                 for pid, post in posts:
                     print(f"\nPost ID: {pid}")
-                    print(post)
-                    print("Liked by:", ", ".join(post.likes) if post.likes else "No likes yet")
-                    if post.comments:
-                        print("\nComments:")
-                        for commenter, comment, timestamp in post.comments:
-                            print(f"  {commenter} ({timestamp.strftime('%Y-%m-%d %H:%M')}): {comment}")
+                    display_post(post)
             else:
                 print("No friend posts to show!")
                 
@@ -99,13 +104,16 @@ def show_post_menu(network, username):
             post_id = input("Enter Post ID: ")
             post = network.get_post(post_id)
             if post:
-                print(post)
-                if username in post.likes:
-                    if network.unlike_post(post_id, username):
-                        print("Post unliked!")
+                if (network.vertices[post.author] in network.vertices[username].adjacency_map) or (post.author == username):
+                    if username in post.likes:
+                        if network.unlike_post(post_id, username):
+                            print("Post Unliked!")
+                    else:
+                        if network.like_post(post_id, username):
+                            print("Post Liked!")
+                    display_post(post)
                 else:
-                    if network.like_post(post_id, username):
-                        print("Post liked!")
+                    print("You are not a friend of the Post Author!")
             else:
                 print("Post not found!")
                 
@@ -113,14 +121,18 @@ def show_post_menu(network, username):
             post_id = input("Enter Post ID: ")
             post = network.get_post(post_id)
             if post:
-                print(post)
-                comment = input("Enter your comment: ")
-                if network.comment_on_post(post_id, username, comment):
-                    print("Comment added!")
+                if (network.vertices[post.author] in network.vertices[username].adjacency_map) or (post.author == username):
+                    display_post(post)
+                    comment = input("Enter your comment: ")
+                    if network.comment_on_post(post_id, username, comment):
+                        print("Comment Added!")
+                        display_post(post)
+                    else:
+                        print("Failed to add comment!")
                 else:
-                    print("Failed to add comment!")
+                    print("You are not a friend of the Post Author!")
             else:
-                print("Post not found!")
+                print("Post not Found!")
                 
         elif choice == "6":
             break
@@ -155,8 +167,8 @@ def main():
         
         elif option == "2":
             username = get_username("Enter the Username: ")
-            print(f"\n==== Welcome, {username} ====")
             while True:
+                print(f"\n==== Welcome, {username} ====")
                 print("1. Get Friend Recommendations")
                 print("2. Search Users")
                 print("3. View Users by Hobby")
@@ -164,7 +176,7 @@ def main():
                 print("5. Send Message")
                 print("6. View Messages")
                 print("7. Posts")
-                print("8. logout")
+                print("8. Logout")
                 choice = input("Choose an option: ")
                 
                 if choice == "1":
@@ -229,8 +241,8 @@ def main():
                             print("Invalid input. Please enter a number!")
                     
                 elif choice == "2":
-                    search_username = get_username("Enter Username to Search: ")
-                    if search_username in network.vertices:
+                    search_username = get_username("Enter Username to Search: ", username)
+                    if search_username != username:
                         person = network.vertices[search_username]
                         print(f"\n==== User Profile: {search_username} ====")
                         print(f"Name: {person.name}")
@@ -316,7 +328,7 @@ def main():
                             if sub_choice not in {"1", "2", "3"}:
                                 print("Invalid option! Please try again.")
                     else:
-                        print("User not found!")
+                        print("You can't search yourself :(")
                     
                 elif choice == "3":
                     ... # TODO: To be implemented by Anurup
