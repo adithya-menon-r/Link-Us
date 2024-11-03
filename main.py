@@ -176,8 +176,10 @@ def main():
                 trie.insert(username) # If no problems encountered, username is accepted and inserted in the Trie
                 break
             hobbies = input("Enter hobbies (comma-separated): ").split(",")
+            hobbies = [h.strip() for h in hobbies if h.strip()]
             description = input("Enter a personal description: ")
             network.add_person(name, username, hobbies, description)
+            hobby_network.add_user_hobbies(username, hobbies)
             print(f"Account for {username.lower()} created successfully!")
         
         elif option == "2":
@@ -330,67 +332,58 @@ def main():
                     while True:
                         print("\n==== Hobby Management Menu ====")
                         print("1. List all hobbies with user counts")
-                        print("2. Search hobbies with partial matching")
-                        print("3. Show top 10 most popular hobbies")
-                        print("4. Identify users with most hobbies")
-                        print("5. Track and display hobby trends over time")
-                        print("6. View users for any hobby")
-                        print("7. Back to Main Menu")
-                
+                        print("2. Show most popular hobbies")
+                        print("3. Find users with most hobbies")
+                        print("4. View hobby trends")
+                        print("5. View users for any hobby")
+                        print("6. Back to Main Menu")
+
                         hobby_choice = input("Choose an option: ")
-                
+
                         if hobby_choice == "1":
                             # List all hobbies with user counts
-                            hobbies_with_counts = hobby_network.get_hobby_counts()
+                            hobby_counts = hobby_network.get_hobby_counts()
                             print("\nHobbies and User Counts:")
-                            for hobby, count in hobbies_with_counts.items():
+                            for hobby, count in hobby_counts.items():
                                 print(f"{hobby}: {count} user(s)")
-                
+
                         elif hobby_choice == "2":
-                            # Search hobbies with partial matching
-                            partial_hobby = input("Enter a hobby or partial hobby to search: ")
-                            matching_hobbies = hobby_network.search_hobbies(partial_hobby)
-                            print("\nMatching Hobbies:")
-                            for hobby in matching_hobbies:
-                                print(hobby)
-                
-                        elif hobby_choice == "3":
-                            # Show top 10 most popular hobbies
+                            # Show top hobbies
                             top_hobbies = hobby_network.get_top_hobbies(limit=10)
                             print("\nTop 10 Most Popular Hobbies:")
                             for hobby, count in top_hobbies:
                                 print(f"{hobby}: {count} user(s)")
-                
+
+                        elif hobby_choice == "3":
+                            # Show users with most hobbies
+                            users = hobby_network.get_users_with_most_hobbies(limit=10)
+                            print("\nUsers with Most Hobbies:")
+                            for username, count in users:
+                                print(f"{username}: {count} hobbies")
+
                         elif hobby_choice == "4":
-                            # Identify users with the most hobbies
-                            users_with_most_hobbies = hobby_network.get_users_with_most_hobbies()
-                            print("\nUsers with the Most Hobbies:")
-                            for user in users_with_most_hobbies:
-                                print(user)
-                
+                            # Show hobby trends
+                            trends = hobby_network.get_hobby_trends(days=30)
+                            print("\nHobby Trends (Last 30 Days):")
+                            for hobby, trend_data in trends.items():
+                                if trend_data:
+                                    latest = trend_data[-1]
+                                    print(f"{hobby}: {latest[1]} users (as of {latest[0].strftime('%Y-%m-%d %H:%M')})")
+
                         elif hobby_choice == "5":
-                            # Track and display hobby trends over time
-                            trends = hobby_network.get_hobby_trends()
-                            print("\nHobby Trends Over Time:")
-                            for date, hobby_trends in trends.items():
-                                print(f"{date}:")
-                                for hobby, count in hobby_trends.items():
-                                    print(f"  {hobby}: {count} new users")
-                
-                        elif hobby_choice == "6":
-                            # View users for any hobby
-                            hobby_name = input("Enter the hobby to view users: ")
-                            users_for_hobby = hobby_network.get_users_by_hobby(hobby_name)
-                            if users_for_hobby:
-                                print(f"\nUsers with hobby '{hobby_name}':")
-                                for user in users_for_hobby:
+                            # View users for specific hobby
+                            hobby = input("Enter hobby name: ")
+                            users = hobby_network.get_users_by_hobby(hobby)
+                            if users:
+                                print(f"\nUsers interested in {hobby}:")
+                                for user in users:
                                     print(user)
                             else:
-                                print("No users found with that hobby.")
-                
-                        elif hobby_choice == "7":
-                            # Exit back to the main menu
+                                print("No users found for this hobby.")
+
+                        elif hobby_choice == "6":
                             break
+
                         else:
                             print("Invalid option! Please try again.")
                     
