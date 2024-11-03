@@ -2,7 +2,6 @@ from random import randrange
 
 class Entry:
     """A key-value pair entry for the hash map"""
-    __slots__ = '_key', '_value'
     
     def __init__(self, k, v):
         self._key = k
