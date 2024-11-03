@@ -102,8 +102,17 @@ class SocialNetwork:
         return False
 
     def send_message(self, from_user, to_user, message):
-        if to_user in self.vertices and from_user in self.vertices[to_user].adjacency_map:
-            self.vertices[to_user].messages.append(f"From {from_user}: {message}")
+        # Check if both users exist
+        if to_user not in self.vertices or from_user not in self.vertices:
+            return False
+            
+        # Get the actual vertex objects
+        to_vertex = self.vertices[to_user]
+        from_vertex = self.vertices[from_user]
+        
+        # Check if they are friends by looking in the adjacency map
+        if from_vertex in to_vertex.adjacency_map:
+            to_vertex.messages.append(f"From {from_user}: {message}")
             return True
         return False
 
