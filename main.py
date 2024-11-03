@@ -33,6 +33,87 @@ def confirm_username(username, suggestions):
                 print("Invalid option. Please enter a number!")
     return None
 
+def show_post_menu(network, username):
+    while True:
+        print("\n==== Post Menu ====")
+        print("1. Create New Post")
+        print("2. View My Posts")
+        print("3. View Friend Posts")
+        print("4. Like/Unlike Post")
+        print("5. Comment on Post")
+        print("6. Back to Main Menu")
+        
+        choice = input("Choose an option: ")
+        
+        if choice == "1":
+            content = input("Enter your post content: ")
+            post_id = network.create_post(username, content)
+            print("Post created successfully!")
+            
+        elif choice == "2":
+            posts = network.get_user_posts(username)
+            if posts:
+                print("\nYour Posts:")
+                for pid, post in posts:
+                    print(f"\nPost ID: {pid}")
+                    print(post)
+                    print("Liked by:", ", ".join(post.likes) if post.likes else "No likes yet")
+                    if post.comments:
+                        print("\nComments:")
+                        for commenter, comment, timestamp in post.comments:
+                            print(f"  {commenter} ({timestamp.strftime('%Y-%m-%d %H:%M')}): {comment}")
+            else:
+                print("No posts yet!")
+                
+        elif choice == "3":
+            posts = network.get_friend_posts(username)
+            if posts:
+                print("\nFriend Posts:")
+                for pid, post in posts:
+                    print(f"\nPost ID: {pid}")
+                    print(post)
+                    print("Liked by:", ", ".join(post.likes) if post.likes else "No likes yet")
+                    if post.comments:
+                        print("\nComments:")
+                        for commenter, comment, timestamp in post.comments:
+                            print(f"  {commenter} ({timestamp.strftime('%Y-%m-%d %H:%M')}): {comment}")
+            else:
+                print("No friend posts to show!")
+                
+        elif choice == "4":
+            post_id = input("Enter Post ID: ")
+            post = network.get_post(post_id)
+            if post:
+                print(post)
+                if username in post.likes:
+                    if network.unlike_post(post_id, username):
+                        print("Post unliked!")
+                else:
+                    if network.like_post(post_id, username):
+                        print("Post liked!")
+            else:
+                print("Post not found!")
+                
+        elif choice == "5":
+            post_id = input("Enter Post ID: ")
+            post = network.get_post(post_id)
+            if post:
+                print(post)
+                comment = input("Enter your comment: ")
+                if network.comment_on_post(post_id, username, comment):
+                    print("Comment added!")
+                else:
+                    print("Failed to add comment!")
+            else:
+                print("Post not found!")
+                
+        elif choice == "6":
+            break
+        
+        else:
+            print("Invalid option!")
+
+
 def get_username(input_msg):
     while True:
         username = input(input_msg)
@@ -79,15 +160,104 @@ def main():
                 print("4. Inbox")
                 print("5. Send Message")
                 print("6. View Messages")
-                print("7. Logout")
+                print("7. Posts")
+                print("8. logout")
                 choice = input("Choose an option: ")
                 
                 if choice == "1":
                     ... # TODO: To be implemented by Aashiq & Narain
                     
                 elif choice == "2":
-                    username = get_username("Enter Username to Search: ")
-                    ... # TODO: Rest to be implemented by Karthikeyan
+                    search_username = get_username("Enter Username to Search: ")
+                    if search_username in network.vertices:
+                        person = network.vertices[search_username]
+                        print(f"\n==== User Profile: {search_username} ====")
+                        print(f"Name: {person.name}")
+                        print(f"Hobbies: {', '.join(person.hobbies)}")
+                        if person.description:
+                            print(f"Description: {person.description}")
+                        
+                        # Show connection status
+                        is_friend = person in network.vertices[username].adjacency_map
+                        has_pending_request = search_username in network.vertices[username].inbox
+                        received_request = username in person.inbox
+                        
+                        if is_friend:
+                            print("\nStatus: Friend ✓")
+                            common_friends_count = network.common_friends(username, search_username)
+                            print(f"Common Friends: {common_friends_count}")
+                        else:
+                            print("\nStatus: Not Connected")
+                            
+                        while True:
+                            print("\nOptions:")
+                            if is_friend:
+                                print("1. View Posts")
+                                print("2. Send Message")
+                                print("3. Back")
+                            elif received_request:
+                                print("1. Accept Friend Request")
+                                print("2. Back")
+                            elif has_pending_request:
+                                print("1. Friend Request Pending")
+                                print("2. Back")
+                            else:
+                                print("1. Send Friend Request")
+                                print("2. Back")
+                            
+                            sub_choice = input("Choose an option: ")
+                            
+                            if is_friend:
+                                if sub_choice == "1":
+                                    posts = network.get_user_posts(search_username)
+                                    if posts:
+                                        print("\nUser Posts:")
+                                        for pid, post in posts:
+                                            print(f"\nPost ID: {pid}")
+                                            print(post)
+                                            print("Liked by:", ", ".join(post.likes) if post.likes else "No likes yet")
+                                            if post.comments:
+                                                print("\nComments:")
+                                                for commenter, comment, timestamp in post.comments:
+                                                    print(f"  {commenter} ({timestamp.strftime('%Y-%m-%d %H:%M')}): {comment}")
+                                    else:
+                                        print("No posts to show!")
+                                elif sub_choice == "2":
+                                    message = input("Enter your message: ")
+                                    if network.send_message(username, search_username, message):
+                                        print("Message sent successfully!")
+                                    else:
+                                        print("Failed to send message.")
+                                elif sub_choice == "3":
+                                    break
+                            elif received_request:
+                                if sub_choice == "1":
+                                    if network.accept_friend_request(username, search_username):
+                                        print(f"Yay! You are now friends with {search_username}!")
+                                        break
+                                    else:
+                                        print("Failed to accept friend request.")
+                                elif sub_choice == "2":
+                                    break
+                            elif has_pending_request:
+                                if sub_choice in {"1", "2"}:
+                                    break
+                            else:
+                                if sub_choice == "1":
+                                    if network.send_friend_request(username, search_username):
+                                        print("Friend request sent successfully!")
+                                        break
+                                    else:
+                                        print("Failed to send friend request.")
+                                elif sub_choice == "2":
+                                    break
+                            
+                            if sub_choice not in {"1", "2", "3"}:
+                                print("Invalid option! Please try again.")
+                    else:
+                        print("User not found!")
+                    
+                    
                 
                 elif choice == "3":
                     ... # TODO: To be implemented by Anurup
@@ -124,8 +294,11 @@ def main():
                             print(msg)
                     else:
                         print("No messages found.")
+
+                elif choice=="7":
+                    show_post_menu(network, username)
                 
-                elif choice == "7":
+                elif choice == "8":
                     print(f"\nLogging out {username}...")
                     break
                 
