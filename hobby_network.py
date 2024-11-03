@@ -1,137 +1,144 @@
 from collections import deque
 from datetime import datetime, timedelta
-from typing import List, Set, Tuple
-
+from typing import List, Set, Tuple, Dict
 from max_heap import MaxHeap
+from hash_map import ChainHashMap
 
 class HobbyVertex:
     """Node representing a hobby in the hobby graph"""
     def __init__(self, hobby_name: str):
         self.hobby_name = hobby_name
-        self.users = set()  # Set of users with this hobby
-        self.connections = {}  # Map to other hobbies and their weights (shared users)
-        self.trend_data = deque()  # Efficient handling of timestamped data with deque
+        self.users = set()  # Set of usernames
+        self.connections = ChainHashMap()  # Map to store related hobbies and their weights
+        self.trend_data = deque(maxlen=100)  # Limited to last 100 entries
+        self.update_trend_data()  # Initialize trend data
 
-    def update_trend_data(self):
-        """Add a timestamp entry and maintain only recent data points (last 100)"""
-        timestamp = datetime.now()
-        self.trend_data.append((timestamp, len(self.users)))
-        if len(self.trend_data) > 100:
-            self.trend_data.popleft()
+    def update_trend_data(self) -> None:
+        """Add current timestamp and user count to trend data"""
+        self.trend_data.append((datetime.now(), len(self.users)))
 
+    def add_connection(self, other_hobby: str) -> None:
+        """Increment connection weight with another hobby"""
+        current_weight = self.connections.get(other_hobby) or 0
+        self.connections.put(other_hobby, current_weight + 1)
 
 class UserVertex:
     """Node representing a user in the hobby graph"""
     def __init__(self, username: str):
         self.username = username
-        self.hobbies = set()  # Set of hobbies this user has
-
+        self.hobbies = set()  # Set of hobby names
 
 class HobbyNetwork:
-    """
-    Graph-based implementation of the hobby network using adjacency lists
-    and custom data structures for optimal performance
-    """
+    """Graph-based implementation of hobby relationships"""
     def __init__(self):
-        self.hobby_vertices = {}  # Maps hobby_name -> HobbyVertex
-        self.user_vertices = {}   # Maps username -> UserVertex
-        self.top_hobbies_cache = None
-        self.user_with_most_hobbies_cache = None
+        self.hobby_vertices: Dict[str, HobbyVertex] = {}
+        self.user_vertices: Dict[str, UserVertex] = {}
+
+    def _normalize_hobby(self, hobby: str) -> str:
+        """Normalize hobby name for consistent storage"""
+        return hobby.lower().strip()
 
     def add_hobby(self, hobby_name: str) -> HobbyVertex:
-        hobby = hobby_name.lower().strip()
-        if not hobby or hobby in self.hobby_vertices:
-            return self.hobby_vertices.get(hobby)
-        
-        self.hobby_vertices[hobby] = HobbyVertex(hobby)
-        self.top_hobbies_cache = None  # Invalidate cache
+        """Add a new hobby or return existing one"""
+        hobby = self._normalize_hobby(hobby_name)
+        if not hobby:
+            raise ValueError("Hobby name cannot be empty")
+            
+        if hobby not in self.hobby_vertices:
+            self.hobby_vertices[hobby] = HobbyVertex(hobby)
+            
         return self.hobby_vertices[hobby]
 
     def add_user(self, username: str) -> UserVertex:
-        if not username or username in self.user_vertices:
-            return self.user_vertices.get(username)
-
-        self.user_vertices[username] = UserVertex(username)
-        self.user_with_most_hobbies_cache = None  # Invalidate cache
+        """Add a new user or return existing one"""
+        if not username:
+            raise ValueError("Username cannot be empty")
+            
+        if username not in self.user_vertices:
+            self.user_vertices[username] = UserVertex(username)
+            
         return self.user_vertices[username]
 
     def add_user_hobby(self, username: str, hobby_name: str) -> None:
-        hobby = hobby_name.lower().strip()
+        """Connect a user to a hobby and update relationships"""
+        if not username or not hobby_name:
+            raise ValueError("Username and hobby name must not be empty")
+
+        hobby = self._normalize_hobby(hobby_name)
         
         # Get or create vertices
         hobby_vertex = self.add_hobby(hobby)
         user_vertex = self.add_user(username)
-        
-        # Avoid duplicate connections
+
+        # Skip if connection already exists
         if hobby in user_vertex.hobbies:
             return
 
-        # Create bidirectional connections
+        # Create new connections
         hobby_vertex.users.add(username)
         user_vertex.hobbies.add(hobby)
         
-        hobby_vertex.update_trend_data()  # Update trend data using deque
+        # Update trend data
+        hobby_vertex.update_trend_data()
 
-        # Update hobby connections for recommendations
-        for other_hobby in user_vertex.hobbies:
-            if other_hobby != hobby:
-                self.hobby_vertices[hobby].connections[other_hobby] = \
-                    self.hobby_vertices[hobby].connections.get(other_hobby, 0) + 1
-                self.hobby_vertices[other_hobby].connections[hobby] = \
-                    self.hobby_vertices[other_hobby].connections.get(hobby, 0) + 1
+        # Update hobby connections
+        for existing_hobby in user_vertex.hobbies:
+            if existing_hobby != hobby:
+                self.hobby_vertices[hobby].add_connection(existing_hobby)
+                self.hobby_vertices[existing_hobby].add_connection(hobby)
 
     def add_user_hobbies(self, username: str, hobbies: List[str]) -> None:
         """Add multiple hobbies for a user"""
+        if not username:
+            raise ValueError("Username cannot be empty")
+        
         for hobby in hobbies:
-            self.add_user_hobby(username, hobby)
+            if hobby:  # Skip empty hobby names
+                self.add_user_hobby(username, hobby)
 
-    def get_all_hobbies(self) -> List[str]:
-        """Return sorted list of all hobbies"""
-        return sorted(self.hobby_vertices.keys())
-
-    def get_users_by_hobby(self, hobby: str) -> Set[str]:
-        """Get all users who have a specific hobby"""
-        hobby_vertex = self.hobby_vertices.get(hobby.lower().strip())
-        return hobby_vertex.users if hobby_vertex else set()
+    def get_hobby_counts(self) -> Dict[str, int]:
+        """Get all hobbies and their user counts"""
+        return {
+            hobby: len(vertex.users)
+            for hobby, vertex in self.hobby_vertices.items()
+        }
 
     def get_top_hobbies(self, limit: int = 10) -> List[Tuple[str, int]]:
-        if self.top_hobbies_cache:
-            return self.top_hobbies_cache[:limit]
-
+        """Get most popular hobbies"""
         heap = MaxHeap()
         for hobby, vertex in self.hobby_vertices.items():
             heap.insert((len(vertex.users), hobby))
-        
-        result = []
-        for _ in range(min(limit, len(self.hobby_vertices))):
-            if not heap.is_empty():
-                count, hobby = heap.extract_max()
-                result.append((hobby, count))
 
-        self.top_hobbies_cache = result  # Cache result
+        result = []
+        while len(result) < limit and not heap.is_empty():
+            count, hobby = heap.extract_max()
+            result.append((hobby, count))
+
         return result
 
-    def get_user_with_most_hobbies(self) -> Tuple[str, int]:
-        if self.user_with_most_hobbies_cache:
-            return self.user_with_most_hobbies_cache
-
-        max_user = None
-        max_count = 0
-        
+    def get_users_with_most_hobbies(self, limit: int = 10) -> List[Tuple[str, int]]:
+        """Get users with the most hobbies"""
+        heap = MaxHeap()
         for username, vertex in self.user_vertices.items():
-            hobby_count = len(vertex.hobbies)
-            if hobby_count > max_count:
-                max_count = hobby_count
-                max_user = username
-                
-        self.user_with_most_hobbies_cache = (max_user, max_count)  # Cache result
-        return max_user, max_count
+            heap.insert((len(vertex.hobbies), username))
 
-    def get_hobby_trend(self, hobby: str, days: int = 30) -> List[Tuple[datetime, int]]:
-        """Get trend data for a specific hobby"""
-        hobby_vertex = self.hobby_vertices.get(hobby.lower().strip())
-        if not hobby_vertex:
-            return []
-            
+        result = []
+        while len(result) < limit and not heap.is_empty():
+            count, username = heap.extract_max()
+            result.append((username, count))
+
+        return result
+
+    def get_hobby_trends(self, days: int = 30) -> Dict[str, List[Tuple[datetime, int]]]:
+        """Get trend data for all hobbies"""
         cutoff = datetime.now() - timedelta(days=days)
-        return [(t, c) for t, c in hobby_vertex.trend_data if t >= cutoff]
+        return {
+            hobby: [(t, c) for t, c in vertex.trend_data if t >= cutoff]
+            for hobby, vertex in self.hobby_vertices.items()
+        }
+
+    def get_users_by_hobby(self, hobby: str) -> Set[str]:
+        """Get all users who have a specific hobby"""
+        hobby = self._normalize_hobby(hobby)
+        vertex = self.hobby_vertices.get(hobby)
+        return vertex.users.copy() if vertex else set()
