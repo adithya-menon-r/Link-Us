@@ -33,6 +33,17 @@ def confirm_username(username, suggestions):
                 print("Invalid option. Please enter a number!")
     return None
 
+def get_username(input_msg):
+    while True:
+        username = input(input_msg)
+        suggestions = trie.get_suggestions(username)
+        if not suggestions:
+            print("No such username found! Please try again.")
+            continue
+        confirmed_username = confirm_username(username, suggestions)
+        if confirmed_username:
+            return confirmed_username
+        
 def show_post_menu(network, username):
     while True:
         print("\n==== Post Menu ====")
@@ -112,18 +123,6 @@ def show_post_menu(network, username):
         
         else:
             print("Invalid option!")
-
-
-def get_username(input_msg):
-    while True:
-        username = input(input_msg)
-        suggestions = trie.get_suggestions(username)
-        if not suggestions:
-            print("No such username found! Please try again.")
-            continue
-        confirmed_username = confirm_username(username, suggestions)
-        if confirmed_username:
-            return confirmed_username
 
 def main():
     while True:
@@ -257,8 +256,6 @@ def main():
                     else:
                         print("User not found!")
                     
-                    
-                
                 elif choice == "3":
                     ... # TODO: To be implemented by Anurup
                     
