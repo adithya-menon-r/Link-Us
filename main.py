@@ -62,7 +62,6 @@ def get_username(input_msg, current_username=None):
                 continue
             confirmed_username = confirm_username(username, suggestions) # Gets desried username from function 
         else:
-            print("1\n")
             confirmed_username = username # If input's exact match is there, set that as desired username for return
         if confirmed_username: # If desired username is got, return it, else repeat
             return confirmed_username
@@ -412,7 +411,7 @@ def main():
                         print("No pending Friend Requests.")
                 
                 elif choice == "5":
-                    to_user = get_username("Enter the Username of the recipient: ")
+                    to_user = get_username("Enter the Username of the recipient: ", username)
                     message = input("Enter your message: ")
                     if network.send_message(username, to_user, message):
                         print("Message sent successfully!")
@@ -422,11 +421,11 @@ def main():
                 elif choice == "6":
                     messages = network.get_messages(username)
                     if messages:
-                        print("Your Messages:")
+                        print("\nYour Messages:")
                         for msg in messages:
                             print(msg)
                     else:
-                        print("No messages found.")
+                        print("\nNo messages found.")
 
                 elif choice=="7":
                     handle_post_menu(network, username)
