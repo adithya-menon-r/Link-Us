@@ -1,30 +1,36 @@
 import re
 
+# Required Classes are imported from other files
 from social_network import SocialNetwork
 from hobby_network import HobbyNetwork
 from friend_recommendation import FriendRecommender
 from auto_complete import Trie
 
+# Imported Classes are initialised
 network = SocialNetwork()
 hobby_network = HobbyNetwork()
 recommender = FriendRecommender(network, hobby_network)
 trie = Trie()
 
 def validate_username(username):
-    return re.match(r'^[A-Za-z0-9_.]+$', username)
+    """
+    Function to validate username using RegEx
+    """
+    return re.match(r'^[A-Za-z0-9_.]+$', username) # Allows only alphabets, digits, underscores and periods
 
 def confirm_username(username, suggestions):
-    if len(suggestions) == 1:
-        if suggestions[0] != username.lower():
+    """
+     Function that returns the desired username from the recieved suggestions
+    """
+    # If only 1 partial match is found
+    if len(suggestions) == 1 and suggestions[0] != username.lower(): 
             confirmation = input(f"Similar username found. Did you mean {suggestions[0]}? (yes/no): ")
-            if confirmation.lower() in {"y", "yes"}:
+            if confirmation.lower() in {"y", "yes"}: # If confirmation yields yes, return it, else return None for repeat
                 return suggestions[0]
-        else:
-            return suggestions[0]
-    else:
+    else: # If more than 1 partial match was found
         print("Similar usernames found:")
         for i, suggestion in enumerate(suggestions, start=1):
-            print(f"{i}. {suggestion}")
+            print(f"{i}. {suggestion}") # Print the matches for user to decide
         print("0. Retry")
         while True:
             try:
@@ -32,39 +38,48 @@ def confirm_username(username, suggestions):
                 if confirmation == 0:
                     break
                 elif 1 <= confirmation <= len(suggestions):
-                    return suggestions[confirmation - 1]
+                    return suggestions[confirmation - 1] # Return the desired username
                 else:
                     print("Invalid option. Please try again!")
             except ValueError:
                 print("Invalid option. Please enter a number!")
-    return None
+    return None # If no desired username was chosen, return None for repeat
 
 def get_username(input_msg, current_username=None):
+    """
+    Function to handle the process of getting the desired username
+    """
     while True:
         username = input(input_msg)
-        if not trie.search(username):
+        # Searches if exact input has a match in Trie, if not it gets suggestions/close matches
+        if not trie.search(username): 
             suggestions = trie.get_suggestions(username)
-            if current_username in suggestions:
+            # Remove the current username from suggestions, so that you can't search yourself
+            if current_username in suggestions: 
                 suggestions.remove(current_username)
-            if not suggestions:
+            if not suggestions: # If suggestions returns [], it means no matches
                 print("No such username found! Please try again.")
                 continue
-            confirmed_username = confirm_username(username, suggestions)
+            confirmed_username = confirm_username(username, suggestions) # Gets desried username from function 
         else:
-            confirmed_username = username
-        if confirmed_username:
+            print("1\n")
+            confirmed_username = username # If input's exact match is there, set that as desired username for return
+        if confirmed_username: # If desired username is got, return it, else repeat
             return confirmed_username
         
 def display_post(post):
+    """
+    Function to display details of a post. (Designed to remove repeated code)
+    """
     print("-----------------------------------------------------------------------------------")
     print(post)
-    print("Liked by:", ", ".join(post.likes) if post.likes else "No likes yet")
-    if post.comments:
+    print("Liked by:", ", ".join(post.likes) if post.likes else "No likes yet") # Print Like Details
+    if post.comments: # If post.comments exist, print the comment details
         print("\nComments:")
         for commenter, comment, timestamp in post.comments:
             print(f"  {commenter} ({timestamp.strftime('%Y-%m-%d %H:%M')}): {comment}")
 
-def show_post_menu(network, username):
+def handle_post_menu(network, username):
     while True:
         print("\n==== Post Menu ====")
         print("1. Create New Post")
@@ -143,7 +158,7 @@ def show_post_menu(network, username):
 
 def main():
     while True:
-        print("======== LinkUs ========")
+        print("\n======== LinkUs ========")
         print("1. Create Account")
         print("2. Login")
         print("3. Exit")
@@ -153,18 +168,18 @@ def main():
             name = input("Enter your name: ")
             while True:
                 username = input("Enter a username: ")
-                if not validate_username(username):
+                if not validate_username(username): # Checks if entered username is valid based on RegEx rules
                     print("Invalid username! Try again with only letters, numbers, underscore and period")
                     continue
-                if trie.search(username):
+                if trie.search(username): # Checks if such a username already exists (using Trie)
                     print("Username already exists! Please try again.")
                     continue
-                trie.insert(username)
+                trie.insert(username) # If no problems encountered, username is accepted and inserted in the Trie
                 break
             hobbies = input("Enter hobbies (comma-separated): ").split(",")
             description = input("Enter a personal description: ")
             network.add_person(name, username, hobbies, description)
-            print(f"Account for {username.lower()} created successfully!\n")
+            print(f"Account for {username.lower()} created successfully!")
         
         elif option == "2":
             username = get_username("Enter the Username: ")
@@ -414,7 +429,7 @@ def main():
                         print("No messages found.")
 
                 elif choice=="7":
-                    show_post_menu(network, username)
+                    handle_post_menu(network, username)
                 
                 elif choice == "8":
                     print(f"\nLogging out {username}...")
