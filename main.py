@@ -33,6 +33,87 @@ def confirm_username(username, suggestions):
                 print("Invalid option. Please enter a number!")
     return None
 
+def show_post_menu(network, username):
+    while True:
+        print("\n==== Post Menu ====")
+        print("1. Create New Post")
+        print("2. View My Posts")
+        print("3. View Friend Posts")
+        print("4. Like/Unlike Post")
+        print("5. Comment on Post")
+        print("6. Back to Main Menu")
+        
+        choice = input("Choose an option: ")
+        
+        if choice == "1":
+            content = input("Enter your post content: ")
+            post_id = network.create_post(username, content)
+            print("Post created successfully!")
+            
+        elif choice == "2":
+            posts = network.get_user_posts(username)
+            if posts:
+                print("\nYour Posts:")
+                for pid, post in posts:
+                    print(f"\nPost ID: {pid}")
+                    print(post)
+                    print("Liked by:", ", ".join(post.likes) if post.likes else "No likes yet")
+                    if post.comments:
+                        print("\nComments:")
+                        for commenter, comment, timestamp in post.comments:
+                            print(f"  {commenter} ({timestamp.strftime('%Y-%m-%d %H:%M')}): {comment}")
+            else:
+                print("No posts yet!")
+                
+        elif choice == "3":
+            posts = network.get_friend_posts(username)
+            if posts:
+                print("\nFriend Posts:")
+                for pid, post in posts:
+                    print(f"\nPost ID: {pid}")
+                    print(post)
+                    print("Liked by:", ", ".join(post.likes) if post.likes else "No likes yet")
+                    if post.comments:
+                        print("\nComments:")
+                        for commenter, comment, timestamp in post.comments:
+                            print(f"  {commenter} ({timestamp.strftime('%Y-%m-%d %H:%M')}): {comment}")
+            else:
+                print("No friend posts to show!")
+                
+        elif choice == "4":
+            post_id = input("Enter Post ID: ")
+            post = network.get_post(post_id)
+            if post:
+                print(post)
+                if username in post.likes:
+                    if network.unlike_post(post_id, username):
+                        print("Post unliked!")
+                else:
+                    if network.like_post(post_id, username):
+                        print("Post liked!")
+            else:
+                print("Post not found!")
+                
+        elif choice == "5":
+            post_id = input("Enter Post ID: ")
+            post = network.get_post(post_id)
+            if post:
+                print(post)
+                comment = input("Enter your comment: ")
+                if network.comment_on_post(post_id, username, comment):
+                    print("Comment added!")
+                else:
+                    print("Failed to add comment!")
+            else:
+                print("Post not found!")
+                
+        elif choice == "6":
+            break
+        
+        else:
+            print("Invalid option!")
+
+
 def get_username(input_msg):
     while True:
         username = input(input_msg)
@@ -79,7 +160,8 @@ def main():
                 print("4. Inbox")
                 print("5. Send Message")
                 print("6. View Messages")
-                print("7. Logout")
+                print("7. Posts")
+                print("8. logout")
                 choice = input("Choose an option: ")
                 
                 if choice == "1":
@@ -87,7 +169,7 @@ def main():
                     
                 elif choice == "2":
                     username = get_username("Enter Username to Search: ")
-                    ... # TODO: Rest to be implemented by Karthikeyan
+                    
                 
                 elif choice == "3":
                     ... # TODO: To be implemented by Anurup
@@ -124,8 +206,11 @@ def main():
                             print(msg)
                     else:
                         print("No messages found.")
+
+                elif choice=="7":
+                    show_post_menu(network, username)
                 
-                elif choice == "7":
+                elif choice == "8":
                     print(f"\nLogging out {username}...")
                     break
                 
