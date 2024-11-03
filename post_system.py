@@ -1,10 +1,13 @@
 import math
 from datetime import datetime
-from typing import List, Set, Tuple, Optional
+from typing import List, Set, Tuple
 
 class Post:
     """Represents a social network post with content, likes, and comments"""
+    current_post_id = 0
     def __init__(self, content: str, author: str, timestamp: datetime = None):
+        self.pid = Post.current_post_id
+        Post.current_post_id += 1
         self.content = content
         self.author = author
         self.timestamp = timestamp or datetime.now()

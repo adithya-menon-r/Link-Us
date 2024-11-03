@@ -1,7 +1,8 @@
-import heapq
-from typing import List, Set, Tuple, Optional
+from datetime import datetime
+from typing import List, Tuple, Optional
 
 from hash_map import ChainHashMap
+from max_heap import MaxHeap
 from post_system import Post
 
 class Deque:
@@ -43,6 +44,7 @@ class SocialNetwork:
         self.posts = ChainHashMap()  # Maps post_id to Post objects
         self.user_posts = ChainHashMap()  # Maps username to list of post IDs
         self.post_counter = 0  # For generating unique post IDs
+        self.interaction_history = {}  # Track user interactions
 
     def add_person(self, name, username, hobbies, description=None):
         person = Vertex(name, username, hobbies, description)
@@ -186,27 +188,84 @@ class SocialNetwork:
         return friend_posts
     
     def get_personalized_feed(self, username: str) -> List[Post]:
-        """Generates a personalized feed using a priority queue for ranking."""
+        """
+        Generates a personalized feed using a priority queue for ranking.
+        
+        Ranking factors (in order of importance):
+        1. Post recency (40% weight)
+        2. Engagement metrics - likes and comments (40% weight)
+        3. User interaction frequency (20% weight)
+        
+        Args:
+            username (str): The user requesting the feed
+            
+        Returns:
+            List[Post]: A list of up to 10 posts, ordered by relevance
+        """
         if username not in self.vertices:
             return []
 
-        # Get friend posts and calculate priority scores
-        posts_heap = []
+        # Initialize MaxHeap outside the loop
+        posts_heap = MaxHeap()
         user = self.vertices[username]
         
-        for friend in user.adjacency_map:
-            friend_post_ids = self.user_posts.get(friend.username) or []
+        # Get current time for recency calculations
+        current_time = datetime.now()
+        
+        # Maximum values for normalization
+        max_time_diff = 60 * 60 * 24 * 7  # 7 days in seconds
+        max_engagement = 0
+        max_interaction = 0
+        
+        # First pass: collect posts and find maximum values
+        friend_posts = []
+        for friend_vertex in user.adjacency_map.keys():
+            friend_username = friend_vertex.username
+            friend_post_ids = self.user_posts.get(friend_username) or []
+            
+            # Get interaction count from history
+            interaction_count = (self.interaction_history.get(username, {})
+                            .get(friend_username, 0))
+            max_interaction = max(max_interaction, interaction_count)
+            
             for pid in friend_post_ids:
                 post = self.posts.get(pid)
                 if post:
-                    # Calculate priority score and push to heap
-                    score = post.priority_score(username, self.interaction_history.get(username, {}))
-                    heapq.heappush(posts_heap, (-score, post))  # Use negative for max-heap behavior
+                    engagement = len(post.likes) * 2 + len(post.comments) * 3
+                    max_engagement = max(max_engagement, engagement)
+                    friend_posts.append((post, interaction_count))
+        
+        # Avoid division by zero
+        max_engagement = max(max_engagement, 1)
+        max_interaction = max(max_interaction, 1)
+        
+        # Second pass: calculate normalized scores and add to heap
+        for post, interaction_count in friend_posts:
+            # 1. Recency Score (40% weight)
+            time_diff = (current_time - post.timestamp).total_seconds()
+            recency_score = 1 - min(time_diff / max_time_diff, 1)
+            
+            # 2. Engagement Score (40% weight)
+            engagement = len(post.likes) * 2 + len(post.comments) * 3
+            engagement_score = engagement / max_engagement
+            
+            # 3. User Interaction Score (20% weight)
+            interaction_score = interaction_count / max_interaction
+            
+            # Calculate final weighted score
+            final_score = (
+                recency_score * 0.4 +
+                engagement_score * 0.4 +
+                interaction_score * 0.2
+            )
+            
+            # Use negative score for max-heap behavior
+            posts_heap.insert((-final_score, post))
 
-        # Retrieve top-ranked posts
+        # Retrieve top 10 posts
         feed = []
-        while posts_heap and len(feed) < 10:
-            _, post = heapq.heappop(posts_heap)
+        while len(feed) < 10 and not posts_heap.is_empty():  # Check if heap is empty
+            score, post = posts_heap.extract_max()
             feed.append(post)
         
         return feed

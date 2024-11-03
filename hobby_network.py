@@ -1,6 +1,6 @@
 from collections import deque
 from datetime import datetime, timedelta
-from typing import List, Set, Tuple, Optional
+from typing import List, Set, Tuple
 
 from max_heap import MaxHeap
 

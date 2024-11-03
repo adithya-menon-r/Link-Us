@@ -56,6 +56,7 @@ def get_username(input_msg, current_username=None):
             return confirmed_username
         
 def display_post(post):
+    print("-----------------------------------------------------------------------------------")
     print(post)
     print("Liked by:", ", ".join(post.likes) if post.likes else "No likes yet")
     if post.comments:
@@ -91,11 +92,11 @@ def show_post_menu(network, username):
                 print("No posts yet!")
                 
         elif choice == "3":
-            posts = network.get_friend_posts(username)
+            posts = network.get_personalized_feed(username)
             if posts:
                 print("\nFriend Posts:")
-                for pid, post in posts:
-                    print(f"\nPost ID: {pid}")
+                for post in posts:
+                    print(f"\nPost ID: {post.pid}")
                     display_post(post)
             else:
                 print("No friend posts to show!")
@@ -203,40 +204,21 @@ def main():
                         print(f"   Common Friends: {common_friends}")
                         print(f"   Match Score: {match_percentage}%")
                         
-                    print("\nOptions:")
-                    print("1. Send Friend Request")
-                    print("2. Back to Menu")
-                    
+                    confirmation = input('\nDo you want to send any friend requests (yes/no)?: ')
+                    if confirmation.lower() not in {'y','yes'}:
+                        continue
                     while True:
                         try:
-                            option = input("\nChoose an option (or enter user number to send request): ")
-                            
-                            if option == "2":
-                                break
-                                
-                            if option == "1":
-                                user_num = input("Enter the number of the user you want to connect with: ")
-                                if user_num.isdigit() and 1 <= int(user_num) <= len(recommendations):
-                                    recommended_user = recommendations[int(user_num) - 1][0]
-                                    if network.send_friend_request(username, recommended_user):
-                                        print(f"\nFriend request sent to {recommended_user}!")
-                                    else:
-                                        print("\nCouldn't send friend request. They might have already received a request from you.")
-                                    break
-                                else:
-                                    print("Invalid user number. Please try again!")
-                            
-                            elif option.isdigit() and 1 <= int(option) <= len(recommendations):
-                                recommended_user = recommendations[int(option) - 1][0]
+                            user_num = input("Enter the user number you want to connect with: ")
+                            if user_num.isdigit() and 1 <= int(user_num) <= len(recommendations):
+                                recommended_user = recommendations[int(user_num) - 1][0]
                                 if network.send_friend_request(username, recommended_user):
                                     print(f"\nFriend request sent to {recommended_user}!")
                                 else:
                                     print("\nCouldn't send friend request. They might have already received a request from you.")
                                 break
-                            
                             else:
-                                print("Invalid option. Please try again!")
-                                
+                                print("Invalid user number. Please try again!")
                         except ValueError:
                             print("Invalid input. Please enter a number!")
                     
