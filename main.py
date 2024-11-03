@@ -1,8 +1,12 @@
 import re
 from social_network import SocialNetwork
+from hobby_network import HobbyNetwork
+from friendRecommendation import FriendRecommender
 from auto_complete import Trie
 
 network = SocialNetwork()
+hobby_network = HobbyNetwork()
+recommender = FriendRecommender(network, hobby_network)
 trie = Trie()
 
 def validate_username(username):
@@ -164,7 +168,65 @@ def main():
                 choice = input("Choose an option: ")
                 
                 if choice == "1":
-                    ... # TODO: To be implemented by Aashiq & Narain
+                    print("\n==== Friend Recommendations ====")
+                    recommendations = recommender.get_recommendations(username)
+                    
+                    if not recommendations:
+                        print("No recommendations available at this time!")
+                        print("Try adding more information to your profile or connecting with more people.")
+                        continue
+                        
+                    print("\nHere are some people you might know:")
+                    for i, (recommended_user, score) in enumerate(recommendations, 1):
+                        person = network.vertices[recommended_user]
+                        # Calculate common friends for display
+                        common_friends = network.common_friends(username, recommended_user)
+                        
+                        # Format the score as a percentage
+                        match_percentage = int(score * 100)
+                        
+                        print(f"\n{i}. {recommended_user}")
+                        print(f"   Name: {person.name}")
+                        print(f"   Hobbies: {', '.join(person.hobbies)}")
+                        print(f"   Common Friends: {common_friends}")
+                        print(f"   Match Score: {match_percentage}%")
+                        
+                    print("\nOptions:")
+                    print("1. Send Friend Request")
+                    print("2. Back to Menu")
+                    
+                    while True:
+                        try:
+                            option = input("\nChoose an option (or enter user number to send request): ")
+                            
+                            if option == "2":
+                                break
+                                
+                            if option == "1":
+                                user_num = input("Enter the number of the user you want to connect with: ")
+                                if user_num.isdigit() and 1 <= int(user_num) <= len(recommendations):
+                                    recommended_user = recommendations[int(user_num) - 1][0]
+                                    if network.send_friend_request(username, recommended_user):
+                                        print(f"\nFriend request sent to {recommended_user}!")
+                                    else:
+                                        print("\nCouldn't send friend request. They might have already received a request from you.")
+                                    break
+                                else:
+                                    print("Invalid user number. Please try again!")
+                            
+                            elif option.isdigit() and 1 <= int(option) <= len(recommendations):
+                                recommended_user = recommendations[int(option) - 1][0]
+                                if network.send_friend_request(username, recommended_user):
+                                    print(f"\nFriend request sent to {recommended_user}!")
+                                else:
+                                    print("\nCouldn't send friend request. They might have already received a request from you.")
+                                break
+                            
+                            else:
+                                print("Invalid option. Please try again!")
+                                
+                        except ValueError:
+                            print("Invalid input. Please enter a number!")
                     
                 elif choice == "2":
                     search_username = get_username("Enter Username to Search: ")
