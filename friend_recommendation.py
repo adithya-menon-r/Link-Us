@@ -1,9 +1,10 @@
-# Import from provided files
-from social_network import SocialNetwork
-from hobby_network import HobbyNetwork
-from max_heap import MaxHeap
 from typing import List, Tuple, Dict
 from collections import defaultdict
+
+# Import from provided files
+from max_heap import MaxHeap
+from social_network import SocialNetwork
+from hobby_network import HobbyNetwork
 
 class FriendRecommender:
     def __init__(self, social_network: SocialNetwork, hobby_network: HobbyNetwork):
