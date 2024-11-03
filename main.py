@@ -1,7 +1,7 @@
 import re
 from social_network import SocialNetwork
 from hobby_network import HobbyNetwork
-from friendRecommendation import FriendRecommender
+from friend_recommendation import FriendRecommender
 from auto_complete import Trie
 
 network = SocialNetwork()
