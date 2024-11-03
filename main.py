@@ -168,7 +168,95 @@ def main():
                     ... # TODO: To be implemented by Aashiq & Narain
                     
                 elif choice == "2":
-                    username = get_username("Enter Username to Search: ")
+                    search_username = get_username("Enter Username to Search: ")
+                    if search_username in network.vertices:
+                        person = network.vertices[search_username]
+                        print(f"\n==== User Profile: {search_username} ====")
+                        print(f"Name: {person.name}")
+                        print(f"Hobbies: {', '.join(person.hobbies)}")
+                        if person.description:
+                            print(f"Description: {person.description}")
+                        
+                        # Show connection status
+                        is_friend = person in network.vertices[username].adjacency_map
+                        has_pending_request = search_username in network.vertices[username].inbox
+                        received_request = username in person.inbox
+                        
+                        if is_friend:
+                            print("\nStatus: Friend ✓")
+                            common_friends_count = network.common_friends(username, search_username)
+                            print(f"Common Friends: {common_friends_count}")
+                        else:
+                            print("\nStatus: Not Connected")
+                            
+                        while True:
+                            print("\nOptions:")
+                            if is_friend:
+                                print("1. View Posts")
+                                print("2. Send Message")
+                                print("3. Back")
+                            elif received_request:
+                                print("1. Accept Friend Request")
+                                print("2. Back")
+                            elif has_pending_request:
+                                print("1. Friend Request Pending")
+                                print("2. Back")
+                            else:
+                                print("1. Send Friend Request")
+                                print("2. Back")
+                            
+                            sub_choice = input("Choose an option: ")
+                            
+                            if is_friend:
+                                if sub_choice == "1":
+                                    posts = network.get_user_posts(search_username)
+                                    if posts:
+                                        print("\nUser Posts:")
+                                        for pid, post in posts:
+                                            print(f"\nPost ID: {pid}")
+                                            print(post)
+                                            print("Liked by:", ", ".join(post.likes) if post.likes else "No likes yet")
+                                            if post.comments:
+                                                print("\nComments:")
+                                                for commenter, comment, timestamp in post.comments:
+                                                    print(f"  {commenter} ({timestamp.strftime('%Y-%m-%d %H:%M')}): {comment}")
+                                    else:
+                                        print("No posts to show!")
+                                elif sub_choice == "2":
+                                    message = input("Enter your message: ")
+                                    if network.send_message(username, search_username, message):
+                                        print("Message sent successfully!")
+                                    else:
+                                        print("Failed to send message.")
+                                elif sub_choice == "3":
+                                    break
+                            elif received_request:
+                                if sub_choice == "1":
+                                    if network.accept_friend_request(username, search_username):
+                                        print(f"Yay! You are now friends with {search_username}!")
+                                        break
+                                    else:
+                                        print("Failed to accept friend request.")
+                                elif sub_choice == "2":
+                                    break
+                            elif has_pending_request:
+                                if sub_choice in {"1", "2"}:
+                                    break
+                            else:
+                                if sub_choice == "1":
+                                    if network.send_friend_request(username, search_username):
+                                        print("Friend request sent successfully!")
+                                        break
+                                    else:
+                                        print("Failed to send friend request.")
+                                elif sub_choice == "2":
+                                    break
+                            
+                            if sub_choice not in {"1", "2", "3"}:
+                                print("Invalid option! Please try again.")
+                    else:
+                        print("User not found!")
+                    
                     
                 
                 elif choice == "3":
