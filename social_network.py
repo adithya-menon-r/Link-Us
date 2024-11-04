@@ -316,11 +316,11 @@ class SocialNetwork:
                 engagement_score * 0.4 +
                 interaction_score * 0.2
             )
-            posts_heap.insert((-final_score, post))
+            posts_heap.insert((final_score, post))
 
         feed = []
         while len(feed) < 10 and not posts_heap.is_empty():
-            score, post = posts_heap.extract_max()
+            post = posts_heap.extract_max()[1]
             feed.append(post)
         return feed
 
