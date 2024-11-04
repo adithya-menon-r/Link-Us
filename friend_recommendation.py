@@ -26,9 +26,6 @@ class FriendRecommender:
             Time Complexity: O(P) where P is the number of posts by the user
             Justification: Must process each post exactly once to calculate engagement scores, with constant-time operations per post.
         """
-        if username in self.popularity_cache:
-            return self.popularity_cache[username] # Return cached score if it exists
-            
         user = self.social_network.vertices.get(username)
         if not user:
             return 0.0 # Return 0 if the user doesn't exist
