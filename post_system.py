@@ -25,21 +25,6 @@ class Post:
     def add_comment(self, username: str, comment: str) -> None:
         """Add a comment to the post"""
         self.comments.append((username, comment, datetime.now()))
-
-    def priority_score(self, viewer_username: str, interaction_history: dict) -> float:
-        """Calculates a priority score for ranking in personalized feeds."""
-        # Time delay factor: newer posts get higher scores
-        time_diff = (datetime.now() - self.timestamp).total_seconds()
-        time_decay = math.exp(-time_diff / (60 * 60 * 24))  # Half-life of one day
-        
-        # Engagement factor: likes and comments add to score
-        engagement_score = len(self.likes) * 2 + len(self.comments) * 3
-
-        # User affinity: based on interaction frequency
-        affinity_score = interaction_history.get(self.author, 0) * 1.5
-        
-        # Final score combines factors with weights
-        return time_decay * 0.4 + engagement_score * 0.4 + affinity_score * 0.2
         
     def __repr__(self) -> str:
         likes_count = len(self.likes)
