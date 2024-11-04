@@ -328,8 +328,8 @@ def main():
                     else:
                         print("You can't search yourself :(")
                     
-                elif choice == "3":
-                    while True:
+                elif choice == "3":  # Checks if the user selected the 'Hobby Management Menu' option
+                    while True:  # Infinite loop to keep showing the menu until the user decides to exit
                         print("\n==== Hobby Management Menu ====")
                         print("1. List all hobbies with user counts")
                         print("2. Show most popular hobbies")
@@ -341,51 +341,54 @@ def main():
                         hobby_choice = input("Choose an option: ")
 
                         if hobby_choice == "1":
-                            # List all hobbies with user counts
-                            hobby_counts = hobby_network.get_hobby_counts()
+                            # Option 1: List all hobbies with user counts
+                            hobby_counts = hobby_network.get_hobby_counts()  # Fetches a dictionary of hobbies and user counts
                             print("\nHobbies and User Counts:")
-                            for hobby, count in hobby_counts.items():
-                                print(f"{hobby}: {count} user(s)")
+                            for hobby, count in hobby_counts.items():  # Iterates through each hobby and its user count
+                                print(f"{hobby}: {count} user(s)")  # Prints hobby name and the number of users interested in it
 
                         elif hobby_choice == "2":
-                            # Show top hobbies
-                            top_hobbies = hobby_network.get_top_hobbies(limit=10)
+                            # Option 2: Show top hobbies by popularity
+                            top_hobbies = hobby_network.get_top_hobbies(limit=10)  # Retrieves the top 10 most popular hobbies
                             print("\nTop 10 Most Popular Hobbies:")
-                            for hobby, count in top_hobbies:
-                                print(f"{hobby}: {count} user(s)")
+                            for hobby, count in top_hobbies:  # Loops through the list of popular hobbies
+                                print(f"{hobby}: {count} user(s)")  # Displays each hobby with the number of interested users
 
                         elif hobby_choice == "3":
-                            # Show users with most hobbies
-                            users = hobby_network.get_users_with_most_hobbies(limit=10)
+                            # Option 3: Show users with the most hobbies
+                            users = hobby_network.get_users_with_most_hobbies(limit=10)  # Fetches top 10 users with most hobbies
                             print("\nUsers with Most Hobbies:")
-                            for username, count in users:
-                                print(f"{username}: {count} hobbies")
+                            for username, count in users:  # Loops through each user and their hobby count
+                                print(f"{username}: {count} hobbies")  # Displays username and number of hobbies they are interested in
 
                         elif hobby_choice == "4":
-                            # Show hobby trends
-                            trends = hobby_network.get_hobby_trends(days=30)
+                            # Option 4: Show recent trends in hobbies over the last 30 days
+                            trends = hobby_network.get_hobby_trends(days=30)  # Fetches trend data for each hobby for the past 30 days
                             print("\nHobby Trends (Last 30 Days):")
-                            for hobby, trend_data in trends.items():
-                                if trend_data:
-                                    latest = trend_data[-1]
-                                    print(f"{hobby}: {latest[1]} users (as of {latest[0].strftime('%Y-%m-%d %H:%M')})")
+                            for hobby, trend_data in trends.items():  # Iterates over each hobby and its trend data
+                                if trend_data:  # Checks if there's any trend data available
+                                    latest = trend_data[-1]  # Gets the most recent trend entry (timestamp and user count)
+                                    print(f"{hobby}: {latest[1]} users (as of {latest[0].strftime('%Y-%m-%d %H:%M')})")  # Displays latest user count with date and time
 
                         elif hobby_choice == "5":
-                            # View users for specific hobby
-                            hobby = input("Enter hobby name: ")
-                            users = hobby_network.get_users_by_hobby(hobby)
-                            if users:
+                            # Option 5: View users interested in a specific hobby
+                            hobby = input("Enter hobby name: ")  # Prompts for hobby name input
+                            users = hobby_network.get_users_by_hobby(hobby)  # Retrieves set of users who like this hobby
+                            if users:  # Checks if there are any users for the entered hobby
                                 print(f"\nUsers interested in {hobby}:")
-                                for user in users:
-                                    print(user)
+                                for user in users:  # Loops through each user interested in the hobby
+                                    print(user)  # Prints each user's name
                             else:
-                                print("No users found for this hobby.")
+                                print("No users found for this hobby.")  # Informs if no users are interested in the given hobby
 
                         elif hobby_choice == "6":
-                            break
+                            # Option 6: Return to the main menu
+                            break  # Exits the Hobby Management Menu loop, returning to main menu
 
                         else:
-                            print("Invalid option! Please try again.")
+                            # If an invalid option is entered
+                            print("Invalid option! Please try again.")  # Prompts the user to enter a valid menu option
+
                     
                 elif choice == "4":
                     friend_requests = network.get_friend_requests(username)
