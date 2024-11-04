@@ -261,18 +261,20 @@ def main():
                             print("\nStatus: Not Connected")
                             
                         while True:
-                            print("\nOptions:")
                             if is_friend:
+                                print("\nOptions:")
                                 print("1. View Posts")
                                 print("2. Send Message")
                                 print("3. Back")
                             elif has_pending_request:
+                                print("\nOptions:")
                                 print("1. Accept Friend Request")
                                 print("2. Back")
                             elif received_request:
-                                print("1. Friend Request Pending")
-                                print("2. Back")
+                                print("Friend Request Pending...")
+                                break
                             else:
+                                print("\nOptions:")
                                 print("1. Send Friend Request")
                                 print("2. Back")
                             
