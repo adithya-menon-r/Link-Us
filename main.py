@@ -266,10 +266,10 @@ def main():
                                 print("1. View Posts")
                                 print("2. Send Message")
                                 print("3. Back")
-                            elif received_request:
+                            elif has_pending_request:
                                 print("1. Accept Friend Request")
                                 print("2. Back")
-                            elif has_pending_request:
+                            elif received_request:
                                 print("1. Friend Request Pending")
                                 print("2. Back")
                             else:
@@ -301,7 +301,7 @@ def main():
                                         print("Failed to send message.")
                                 elif sub_choice == "3":
                                     break
-                            elif received_request:
+                            elif has_pending_request:
                                 if sub_choice == "1":
                                     if network.accept_friend_request(username, search_username):
                                         print(f"Yay! You are now friends with {search_username}!")
@@ -310,7 +310,7 @@ def main():
                                         print("Failed to accept friend request.")
                                 elif sub_choice == "2":
                                     break
-                            elif has_pending_request:
+                            elif received_request:
                                 if sub_choice in {"1", "2"}:
                                     break
                             else:
