@@ -196,38 +196,49 @@ def main():
                 print("8. Logout")
                 choice = input("Choose an option: ")
                 
+                # Check if the user selected option 1
                 if choice == "1":
                     print("\n==== Friend Recommendations ====")
+                    # Retrieve friend recommendations based on username
                     recommendations = recommender.get_recommendations(username)
                     
+                    # If no recommendations are available, provide guidance to the user
                     if not recommendations:
                         print("No recommendations available at this time!")
                         print("Try adding more information to your profile or connecting with more people.")
                         continue
                         
+                    # If recommendations are found display each recommendation with details
                     print("\nHere are some people you might know:")
                     for i, (recommended_user, score) in enumerate(recommendations, 1):
+                        #Get the person's details from network
                         person = network.vertices[recommended_user]
+                        
                         # Calculate common friends for display
                         common_friends = network.common_friends(username, recommended_user)
-                        
-                        # Format the score as a percentage
                         match_percentage = int(score * 100)
                         
+                        # Display recommendation details
                         print(f"\n{i}. {recommended_user}")
                         print(f"   Name: {person.name}")
                         print(f"   Hobbies: {', '.join(person.hobbies)}")
                         print(f"   Common Friends: {common_friends}")
                         print(f"   Match Score: {match_percentage}%")
                         
+                    # Ask the user if they want to send friend requests to any recommendations
                     confirmation = input('\nDo you want to send any friend requests (yes/no)?: ')
                     if confirmation.lower() not in {'y','yes'}:
                         continue
                     while True:
                         try:
                             user_num = input("Enter the user number you want to connect with: ")
+
+                            # Check if input is a valid number within the list range
                             if user_num.isdigit() and 1 <= int(user_num) <= len(recommendations):
+                                # Get the username of the recommended person
                                 recommended_user = recommendations[int(user_num) - 1][0]
+
+                                # Attempt to send a friend request
                                 if network.send_friend_request(username, recommended_user):
                                     print(f"\nFriend request sent to {recommended_user}!")
                                 else:
