@@ -87,13 +87,37 @@ class SocialNetwork:
                     count += 1
         return count
 
+    """
+    (method) def send_friend_request(
+        self: Self@SocialNetwork,
+        from_user: Any,
+        to_user: Any
+    ) -> bool
+    """
     def send_friend_request(self, from_user, to_user):
+        """
+        Sends a friend request from one user to another.
+
+        Time Complexity: O(1) - Direct dictionary access and append operation are constant time
+        """
         if to_user in self.vertices and from_user not in self.vertices[to_user].inbox:
             self.vertices[to_user].inbox.append(from_user)
             return True
         return False
 
+    """
+    (method) def accept_friend_request(
+        self: Self@SocialNetwork,
+        username: Any,
+        requester: Any
+    ) -> bool
+    """
     def accept_friend_request(self, username, requester):
+        """
+        Accepts a friend request from a requester to the specified user.
+
+        Time Complexity: O(1) - Dictionary lookup, remove from list, and make_connections are all constant time operations
+        """
         user = self.vertices[username]
         if requester in user.inbox:
             self.make_connections(username, requester)
@@ -101,25 +125,55 @@ class SocialNetwork:
             return True
         return False
 
+    """
+    (method) def send_message(
+        self: Self@SocialNetwork,
+        from_user: Any,
+        to_user: Any,
+        message: Any
+    ) -> bool
+    """
     def send_message(self, from_user, to_user, message):
-        # Check if both users exist
+        """
+        Sends a message from one user to another if they are friends.
+
+        Time Complexity: O(1) - Dictionary lookups and append operation are constant time
+        """
         if to_user not in self.vertices or from_user not in self.vertices:
             return False
-            
-        # Get the actual vertex objects
         to_vertex = self.vertices[to_user]
         from_vertex = self.vertices[from_user]
-        
-        # Check if they are friends by looking in the adjacency map
         if from_vertex in to_vertex.adjacency_map:
             to_vertex.messages.append(f"From {from_user}: {message}")
             return True
         return False
 
+    """
+    (method) def get_messages(
+        self: Self@SocialNetwork,
+        username: Any
+    ) -> list
+    """
     def get_messages(self, username):
+        """
+        Retrieves all messages received by a specified user.
+
+        Time Complexity: O(n) where n is the number of messages - Creating a new list copies all messages
+        """
         return list(self.vertices[username].messages)
 
+    """
+    (method) def get_friend_requests(
+        self: Self@SocialNetwork,
+        username: Any
+    ) -> list
+    """
     def get_friend_requests(self, username):
+        """
+        Retrieves all pending friend requests for a specified user.
+
+        Time Complexity: O(n) where n is the number of friend requests - Creating a new list copies all requests
+        """
         return list(self.vertices[username].inbox)
     
     def record_interaction(self, user1: str, user2: str):
