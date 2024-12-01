@@ -57,16 +57,19 @@ Link-Us/
 
 ## Non-Linear Data Structures Used
 ### Graph
-The Graph data structure is used in `social_netwrok.py` and `hobby_network.py`. In the Social Network, the graph models user connections, where each user is represented as a node, and friendships between users are represented as edges. This structure allows for efficient traversal of user connections. In the Hobby Network, the graph is used to represent hobbies as nodes. Each user is connected to the hobby nodes they are interested in, making it easy to track and manage user hobbies. 
+- The Graph data structure is used in `social_network.py` and `hobby_network.py`. In the Social Network, the graph models user connections, where each user is represented as a node, and friendships between users are represented as edges. This structure allows for efficient traversal of user connections. 
+- In the Hobby Network, the graph is used to represent hobbies as nodes. Each user is connected to the hobby nodes they are interested in, making it easy to track and manage user hobbies. 
 
 ### Trie
-The Trie data structure is employed in `auto_complete.py` to efficiently store and retrieve usernames. Its primary purpose is to enable prefix-based search functionality for autocomplete. It also generates username suggestions by performing a Depth First Search (DFS) from the last character of the prefix to get potential matches. When creating new accounts, username duplication is prevented by checking if the username is already stored in the Trie. 
+- The Trie data structure is employed in `auto_complete.py` to efficiently store and retrieve usernames. Its primary purpose is to enable prefix-based search functionality for autocomplete. It also generates username suggestions by performing a Depth First Search (DFS) from the last character of the prefix to get potential matches. When creating new accounts, username duplication is prevented by checking if the username is already stored in the Trie. 
 
 ### Priority Queue (Max Heap)
-A Priority Queue implemented as a Max Heap is used in both `friend_recommendation.py` and `hobby_network.py`. In the Friend Recommendation System, the Max Heap ranks friends based on various factors like mutual friends, popularity, and hobby similarity, ensuring that the best potential friends are recommended first. In the Hobby Network, the Max Heap helps prioritize the most popular hobbies, ensuring that the trending hobbies are always easily accessible. 
+- A Priority Queue implemented as a Max Heap is used in both `friend_recommendation.py` and `hobby_network.py`. In the Friend Recommendation System, the Max Heap ranks friends based on various factors like mutual friends, popularity, and hobby similarity, ensuring that the best potential friends are recommended first. 
+- In the Hobby Network, the Max Heap helps prioritize the most popular hobbies, ensuring that the trending hobbies are always easily accessible. 
 
 ### Hash Map
-The Hash Map is used in both `social_network.py`(For Posts) and `hobby_network.py`. In the Post System, it is used to store and retrieve post details efficiently, mapping each post object to a post ID and each username to a list of post IDs (posts created by that user). This allows for quick access to posts when users interact with content. In the Hobby Network, the Hash Map is used to map hobbies to users, enabling fast lookups and updates for managing hobby relationships and tracking hobby trends within the system.
+- The Hash Map is used in both `social_network.py`(For Posts) and `hobby_network.py`. In the Post System, it is used to store and retrieve post details efficiently, mapping each post object to a post ID and each username to a list of post IDs (posts created by that user). This allows for quick access to posts when users interact with content. 
+- In the Hobby Network, the Hash Map is used to map hobbies to users, enabling fast lookups and updates for managing hobby relationships and tracking hobby trends within the system.
 
 ## Conclusion
 The Link-Us project effectively utilizes non-linear data structures like graphs, tries, priority queues (Max Heap), and hash maps to build a dynamic social network. These data structures enable features such as friend recommendations, hobby tracking, and user interactions through posts and messages. The project showcases how well-applied data structures can enhance the functionality and performance of a social platform.
